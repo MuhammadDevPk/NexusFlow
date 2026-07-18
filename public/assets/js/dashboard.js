@@ -41,8 +41,8 @@ function initChart() {
             datasets: [{
                 label: 'Throughput',
                 data: data,
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79, 70, 229, 0.05)',
                 borderWidth: 2,
                 fill: true,
                 tension: 0.4,
@@ -63,8 +63,8 @@ function initChart() {
                 y: {
                     min: 0,
                     suggestedMax: 10,
-                    grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
-                    ticks: { color: '#64748b', font: { family: 'Outfit', size: 10 } }
+                    grid: { color: 'rgba(15, 23, 42, 0.05)', drawBorder: false },
+                    ticks: { color: '#475569', font: { family: 'Outfit', size: 10 } }
                 }
             }
         }
