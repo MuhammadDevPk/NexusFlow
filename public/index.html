@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusFlow // High-Concurrency Distributed Event Processor</title>
+    
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for real-time throughput plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+    <div class="glass-bg-decor one"></div>
+    <div class="glass-bg-decor two"></div>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="main-header glass-card">
+            <div class="logo-area">
+                <div class="pulse-ring"></div>
+                <h1>NEXUS<span>FLOW</span></h1>
+                <div class="badge">v1.0 Distributed</div>
+            </div>
+            <div class="header-status">
+                <div class="status-indicator connected" id="server-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">SYSTEM ONLINE</span>
+                </div>
+                <button id="btn-reset-metrics" class="btn btn-secondary btn-sm">Reset Counters</button>
+            </div>
+        </header>
+
+        <!-- TOP STATS CARDS -->
+        <section class="stats-grid">
+            <div class="stat-card glass-card">
+                <div class="stat-icon pushed">📥</div>
+                <div class="stat-info">
+                    <h3>Pushed Events</h3>
+                    <div class="stat-value" id="stat-pushed">0</div>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon processed">✅</div>
+                <div class="stat-info">
+                    <h3>ACKed (Completed)</h3>
+                    <div class="stat-value" id="stat-acked">0</div>
+                </div>
+            </div>
+            <div class="stat-card glass-card">
+                <div class="stat-icon delayed">⏳</div>
+                <div class="stat-info">
+                    <h3>Delayed Retries</h3>
+                    <div class="stat-value" id="stat-delayed">0</div>
+                </div>
+            </div>
+            <div class="stat-card glass-card DLQ-highlight">
+                <div class="stat-icon dlq">⚠️</div>
+                <div class="stat-info">
+                    <h3>Dead Letter Queue</h3>
+                    <div class="stat-value" id="stat-dlq">0</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN LAYOUT GRID -->
+        <div class="main-layout">
+            <!-- LEFT PANEL: QUEUES, WORKERS & CHART -->
+            <div class="panel-left">
+                <!-- CHART -->
+                <div class="chart-section glass-card">
+                    <h2 class="section-title">Throughput Dynamics (Events/sec)</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="throughputChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- QUEUES BACKLOG -->
+                <div class="queues-section glass-card">
+                    <h2 class="section-title">Active Queue Streams</h2>
+                    <div class="queues-container" id="queues-container">
+                        <!-- Dynamic Queue Cards Go Here -->
+                    </div>
+                </div>
+
+                <!-- ACTIVE WORKERS -->
+                <div class="workers-section glass-card">
+                    <h2 class="section-title">Worker Registry & Process Health</h2>
+                    <div class="workers-grid" id="workers-grid">
+                        <!-- Dynamic Worker Badges Go Here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: CONTROLS, INGESTION & REAL-TIME LOGS -->
+            <div class="panel-right">
+                <!-- CONTROL CENTER -->
+                <div class="control-section glass-card">
+                    <h2 class="section-title">Operations Control Center</h2>
+                    <div class="control-group">
+                        <h3>Simulated Traffic Generator</h3>
+                        <div class="btn-group">
+                            <button onclick="triggerLoad(10)" class="btn btn-primary">Inject 10 Jobs</button>
+                            <button onclick="triggerLoad(50)" class="btn btn-primary">Inject 50 Jobs</button>
+                            <button onclick="triggerLoad(100)" class="btn btn-primary btn-glow">Inject 100 Jobs</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group dlq-controls">
+                        <h3>DLQ Actions</h3>
+                        <div class="btn-group">
+                            <button id="btn-dlq-retry" onclick="retryDLQAll()" class="btn btn-success">Retry All DLQ</button>
+                            <button id="btn-dlq-purge" onclick="purgeDLQAll()" class="btn btn-danger">Purge All DLQ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EVENT INGESTION FORM -->
+                <div class="ingestion-section glass-card">
+                    <h2 class="section-title">Manual Event Ingest Gateway</h2>
+                    <form id="ingest-form" onsubmit="handleManualIngest(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ingest-queue">Target Queue</label>
+                                <select id="ingest-queue" required onchange="updateJobNames()">
+                                    <option value="pdf-generation">pdf-generation (PDF Handler)</option>
+                                    <option value="api-sync">api-sync (API Sync Handler)</option>
+                                    <option value="data-transform">data-transform (Data Transform Handler)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ingest-job-name">Job Handler Name</label>
+                                <select id="ingest-job-name" required>
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ingest-idempotency">Resiliency Key (Idempotency UUID)</label>
+                            <div class="input-action-group">
+                                <input type="text" id="ingest-idempotency" required placeholder="Generate or enter unique ID">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="generateUUID()">Generate</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ingest-payload">JSON Parameters / Payload</label>
+                            <textarea id="ingest-payload" required rows="3" class="code-font">{
+  "order_id": 99482,
+  "template": "invoice_pdf",
+  "client_email": "hello@nexusflow.io"
+}</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Dispatch Event Gateway</button>
+                        <div id="ingest-alert" class="alert hidden"></div>
+                    </form>
+                </div>
+
+                <!-- LIVE TERMINAL LOGS -->
+                <div class="logs-section glass-card">
+                    <div class="logs-header">
+                        <h2 class="section-title">Live Node Telemetry Logs</h2>
+                        <span class="pulse-dot"></span>
+                    </div>
+                    <div class="logs-terminal" id="logs-terminal">
+                        <!-- Real-time logs populate here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DEAD LETTER QUEUE (DLQ) TABLE -->
+        <section class="dlq-section glass-card" id="dlq-table-section">
+            <h2 class="section-title">Dead Letter Queue (DLQ) Manager</h2>
+            <div class="table-container">
+                <table class="dlq-table">
+                    <thead>
+                        <tr>
+                            <th>Job ID / Idempotency Key</th>
+                            <th>Queue</th>
+                            <th>Handler Name</th>
+                            <th>Failed Attempts</th>
+                            <th>Terminal Error Message</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dlq-table-body">
+                        <tr>
+                            <td colspan="6" class="table-empty">Dead Letter Queue is empty. No failures reported.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    
+    <script src="/assets/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli') {
+    echo "This script must be run from the command line.\n";
+    exit(1);
+}
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$config = require __DIR__ . '/../config.php';
+
+use NexusFlow\Queue\QueueManager;
+use NexusFlow\Job\Job;
+
+// Parse CLI options
+$options = getopt('', ['count::', 'queue::']);
+$count = isset($options['count']) ? (int)$options['count'] : 10;
+$targetQueue = $options['queue'] ?? null;
+
+$availableQueues = ['pdf-generation', 'api-sync', 'data-transform'];
+if ($targetQueue && !in_array($targetQueue, $availableQueues, true)) {
+    echo "Error: Invalid queue name. Available: " . implode(', ', $availableQueues) . "\n";
+    exit(1);
+}
+
+// Connect to Redis
+try {
+    $queueManager = new QueueManager($config);
+} catch (\Throwable $e) {
+    echo "Fatal: Could not connect to Redis: " . $e->getMessage() . "\n";
+    exit(1);
+}
+
+echo "Generating $count mock events in Redis Streams...\n";
+
+$enqueued = 0;
+for ($i = 0; $i < $count; $i++) {
+    $queue = $targetQueue ?? $availableQueues[array_rand($availableQueues)];
+    $id = 'cli-job-' . bin2hex(random_bytes(6));
+    
+    switch ($queue) {
+        case 'pdf-generation':
+            $job = new Job(
+                id: $id,
+                name: 'pdf.generate',
+                payload: [
+                    'template' => 'invoice-template-' . random_int(1, 5),
+                    'order_id' => random_int(10000, 99999),
+                    'user_id' => random_int(100, 999)
+                ],
+                queue: $queue,
+                createdAt: microtime(true)
+            );
+            break;
+        case 'api-sync':
+            $endpoints = ['users/sync', 'crm/contacts', 'billing/invoices'];
+            $job = new Job(
+                id: $id,
+                name: 'api.sync',
+                payload: [
+                    'endpoint' => $endpoints[array_rand($endpoints)],
+                    'payload' => [
+                        'synced_at' => date('Y-m-d H:i:s'),
+                        'records' => random_int(10, 50)
+                    ]
+                ],
+                queue: $queue,
+                createdAt: microtime(true)
+            );
+            break;
+        case 'data-transform':
+            $operations = ['aggregation', 'anonymization', 'scrubbing'];
+            $job = new Job(
+                id: $id,
+                name: 'data.transform',
+                payload: [
+                    'records_count' => random_int(100, 1000),
+                    'operation' => $operations[array_rand($operations)]
+                ],
+                queue: $queue,
+                createdAt: microtime(true)
+            );
+            break;
+    }
+
+    try {
+        $streamId = $queueManager->enqueue($job);
+        echo " [+] Enqueued [{$job->name}] with Resiliency Key: {$job->id} to stream ID: $streamId\n";
+        $enqueued++;
+    } catch (\Throwable $e) {
+        echo " [-] Failed to enqueue: " . $e->getMessage() . "\n";
+    }
+}
+
+echo "\nSuccessfully injected $enqueued events.\n";

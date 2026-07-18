@@ -1,0 +1,51 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli') {
+    echo "This script must be run from the command line.\n";
+    exit(1);
+}
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$config = require __DIR__ . '/../config.php';
+
+use NexusFlow\Queue\QueueManager;
+use NexusFlow\Job\JobRegistry;
+use NexusFlow\Logging\Logger;
+use NexusFlow\Worker\WorkerManager;
+use NexusFlow\Handlers\PdfGenerationHandler;
+use NexusFlow\Handlers\ApiSyncHandler;
+use NexusFlow\Handlers\DataTransformationHandler;
+
+// 1. Initialize Logger
+$logger = new Logger($config['logging']['path']);
+
+// 2. Initialize Queue Manager
+try {
+    $queueManager = new QueueManager($config);
+} catch (\Throwable $e) {
+    $logger->error("Fatal: Could not initialize QueueManager: " . $e->getMessage());
+    exit(1);
+}
+
+// 3. Initialize Job Registry and register concrete Handlers
+$jobRegistry = new JobRegistry();
+$jobRegistry->register('pdf.generate', new PdfGenerationHandler());
+$jobRegistry->register('api.sync', new ApiSyncHandler());
+$jobRegistry->register('data.transform', new DataTransformationHandler());
+
+// 4. Initialize and start the Master Worker Manager Daemon
+$workerManager = new WorkerManager($config, $queueManager, $jobRegistry, $logger);
+
+try {
+    $workerManager->start();
+} catch (\Throwable $e) {
+    $logger->error("Fatal error in Worker Manager: " . $e->getMessage(), [
+        'exception' => get_class($e),
+        'trace' => $e->getTraceAsString()
+    ]);
+    exit(1);
+}

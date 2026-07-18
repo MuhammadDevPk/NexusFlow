@@ -1,0 +1,20 @@
+{
+    "name": "muhammad/nexusflow",
+    "description": "High-Concurrency Resilient Distributed Task/Event Processor",
+    "type": "project",
+    "require": {
+        "php": ">=8.4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "NexusFlow\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.2"
+    }
+}
