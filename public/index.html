@@ -37,169 +37,408 @@
             </div>
         </header>
 
-        <!-- TOP STATS CARDS -->
-        <section class="stats-grid">
-            <div class="stat-card glass-card">
-                <div class="stat-icon pushed">📥</div>
-                <div class="stat-info">
-                    <h3>Pushed Events</h3>
-                    <div class="stat-value" id="stat-pushed">0</div>
-                </div>
-            </div>
-            <div class="stat-card glass-card">
-                <div class="stat-icon processed">✅</div>
-                <div class="stat-info">
-                    <h3>ACKed (Completed)</h3>
-                    <div class="stat-value" id="stat-acked">0</div>
-                </div>
-            </div>
-            <div class="stat-card glass-card">
-                <div class="stat-icon delayed">⏳</div>
-                <div class="stat-info">
-                    <h3>Delayed Retries</h3>
-                    <div class="stat-value" id="stat-delayed">0</div>
-                </div>
-            </div>
-            <div class="stat-card glass-card DLQ-highlight">
-                <div class="stat-icon dlq">⚠️</div>
-                <div class="stat-info">
-                    <h3>Dead Letter Queue</h3>
-                    <div class="stat-value" id="stat-dlq">0</div>
-                </div>
-            </div>
-        </section>
+        <!-- TAB NAVIGATION -->
+        <div class="tab-navigation glass-card">
+            <button class="tab-btn active" id="btn-tab-monitor" onclick="switchTab('monitor')">🖥️ Live System Monitor</button>
+            <button class="tab-btn" id="btn-tab-docs" onclick="switchTab('docs')">📖 API Integration Guide</button>
+        </div>
 
-        <!-- MAIN LAYOUT GRID -->
-        <div class="main-layout">
-            <!-- LEFT PANEL: QUEUES, WORKERS & CHART -->
-            <div class="panel-left">
-                <!-- CHART -->
-                <div class="chart-section glass-card">
-                    <h2 class="section-title">Throughput Dynamics (Events/sec)</h2>
-                    <div class="chart-wrapper">
-                        <canvas id="throughputChart"></canvas>
+        <!-- MONITOR VIEW TAB -->
+        <div id="monitor-view">
+            <!-- TOP STATS CARDS -->
+            <section class="stats-grid">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon pushed">📥</div>
+                    <div class="stat-info">
+                        <h3>Pushed Events</h3>
+                        <div class="stat-value" id="stat-pushed">0</div>
                     </div>
                 </div>
-
-                <!-- QUEUES BACKLOG -->
-                <div class="queues-section glass-card">
-                    <h2 class="section-title">Active Queue Streams</h2>
-                    <div class="queues-container" id="queues-container">
-                        <!-- Dynamic Queue Cards Go Here -->
+                <div class="stat-card glass-card">
+                    <div class="stat-icon processed">✅</div>
+                    <div class="stat-info">
+                        <h3>ACKed (Completed)</h3>
+                        <div class="stat-value" id="stat-acked">0</div>
                     </div>
                 </div>
-
-                <!-- ACTIVE WORKERS -->
-                <div class="workers-section glass-card">
-                    <h2 class="section-title">Worker Registry & Process Health</h2>
-                    <div class="workers-grid" id="workers-grid">
-                        <!-- Dynamic Worker Badges Go Here -->
+                <div class="stat-card glass-card">
+                    <div class="stat-icon delayed">⏳</div>
+                    <div class="stat-info">
+                        <h3>Delayed Retries</h3>
+                        <div class="stat-value" id="stat-delayed">0</div>
                     </div>
                 </div>
-            </div>
+                <div class="stat-card glass-card DLQ-highlight">
+                    <div class="stat-icon dlq">⚠️</div>
+                    <div class="stat-info">
+                        <h3>Dead Letter Queue</h3>
+                        <div class="stat-value" id="stat-dlq">0</div>
+                    </div>
+                </div>
+            </section>
 
-            <!-- RIGHT PANEL: CONTROLS, INGESTION & REAL-TIME LOGS -->
-            <div class="panel-right">
-                <!-- CONTROL CENTER -->
-                <div class="control-section glass-card">
-                    <h2 class="section-title">Operations Control Center</h2>
-                    <div class="control-group">
-                        <h3>Simulated Traffic Generator</h3>
-                        <div class="btn-group">
-                            <button onclick="triggerLoad(10)" class="btn btn-primary">Inject 10 Jobs</button>
-                            <button onclick="triggerLoad(50)" class="btn btn-primary">Inject 50 Jobs</button>
-                            <button onclick="triggerLoad(100)" class="btn btn-primary btn-glow">Inject 100 Jobs</button>
+            <!-- MAIN LAYOUT GRID -->
+            <div class="main-layout">
+                <!-- LEFT PANEL: QUEUES, WORKERS & CHART -->
+                <div class="panel-left">
+                    <!-- CHART -->
+                    <div class="chart-section glass-card">
+                        <h2 class="section-title">Throughput Dynamics (Events/sec)</h2>
+                        <div class="chart-wrapper">
+                            <canvas id="throughputChart"></canvas>
                         </div>
                     </div>
-                    
-                    <div class="control-group dlq-controls">
-                        <h3>DLQ Actions</h3>
-                        <div class="btn-group">
-                            <button id="btn-dlq-retry" onclick="retryDLQAll()" class="btn btn-success">Retry All DLQ</button>
-                            <button id="btn-dlq-purge" onclick="purgeDLQAll()" class="btn btn-danger">Purge All DLQ</button>
+
+                    <!-- QUEUES BACKLOG -->
+                    <div class="queues-section glass-card">
+                        <h2 class="section-title">Active Queue Streams</h2>
+                        <div class="queues-container" id="queues-container">
+                            <!-- Dynamic Queue Cards Go Here -->
+                        </div>
+                    </div>
+
+                    <!-- ACTIVE WORKERS -->
+                    <div class="workers-section glass-card">
+                        <h2 class="section-title">Worker Registry & Process Health</h2>
+                        <div class="workers-grid" id="workers-grid">
+                            <!-- Dynamic Worker Badges Go Here -->
                         </div>
                     </div>
                 </div>
 
-                <!-- EVENT INGESTION FORM -->
-                <div class="ingestion-section glass-card">
-                    <h2 class="section-title">Manual Event Ingest Gateway</h2>
-                    <form id="ingest-form" onsubmit="handleManualIngest(event)">
-                        <div class="form-row">
+                <!-- RIGHT PANEL: CONTROLS, INGESTION & REAL-TIME LOGS -->
+                <div class="panel-right">
+                    <!-- CONTROL CENTER -->
+                    <div class="control-section glass-card">
+                        <h2 class="section-title">Operations Control Center</h2>
+                        <div class="control-group">
+                            <h3>Simulated Traffic Generator</h3>
+                            <div class="btn-group">
+                                <button onclick="triggerLoad(10)" class="btn btn-primary">Inject 10 Jobs</button>
+                                <button onclick="triggerLoad(50)" class="btn btn-primary">Inject 50 Jobs</button>
+                                <button onclick="triggerLoad(100)" class="btn btn-primary btn-glow">Inject 100 Jobs</button>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group dlq-controls">
+                            <h3>DLQ Actions</h3>
+                            <div class="btn-group">
+                                <button id="btn-dlq-retry" onclick="retryDLQAll()" class="btn btn-success">Retry All DLQ</button>
+                                <button id="btn-dlq-purge" onclick="purgeDLQAll()" class="btn btn-danger">Purge All DLQ</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EVENT INGESTION FORM -->
+                    <div class="ingestion-section glass-card">
+                        <h2 class="section-title">Manual Event Ingest Gateway</h2>
+                        <form id="ingest-form" onsubmit="handleManualIngest(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="ingest-queue">Target Queue</label>
+                                    <select id="ingest-queue" required onchange="updateJobNames()">
+                                        <option value="pdf-generation">pdf-generation (PDF Handler)</option>
+                                        <option value="api-sync">api-sync (API Sync Handler)</option>
+                                        <option value="data-transform">data-transform (Data Transform Handler)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ingest-job-name">Job Handler Name</label>
+                                    <select id="ingest-job-name" required>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="form-group">
-                                <label for="ingest-queue">Target Queue</label>
-                                <select id="ingest-queue" required onchange="updateJobNames()">
-                                    <option value="pdf-generation">pdf-generation (PDF Handler)</option>
-                                    <option value="api-sync">api-sync (API Sync Handler)</option>
-                                    <option value="data-transform">data-transform (Data Transform Handler)</option>
-                                </select>
+                                <label for="ingest-idempotency">Resiliency Key (Idempotency UUID)</label>
+                                <div class="input-action-group">
+                                    <input type="text" id="ingest-idempotency" required placeholder="Generate or enter unique ID">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="generateUUID()">Generate</button>
+                                </div>
                             </div>
+
                             <div class="form-group">
-                                <label for="ingest-job-name">Job Handler Name</label>
-                                <select id="ingest-job-name" required>
-                                    <!-- Populated dynamically -->
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="ingest-idempotency">Resiliency Key (Idempotency UUID)</label>
-                            <div class="input-action-group">
-                                <input type="text" id="ingest-idempotency" required placeholder="Generate or enter unique ID">
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="generateUUID()">Generate</button>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="ingest-payload">JSON Parameters / Payload</label>
-                            <textarea id="ingest-payload" required rows="3" class="code-font">{
+                                <label for="ingest-payload">JSON Parameters / Payload</label>
+                                <textarea id="ingest-payload" required rows="3" class="code-font">{
   "order_id": 99482,
   "template": "invoice_pdf",
   "client_email": "hello@nexusflow.io"
 }</textarea>
-                        </div>
+                            </div>
 
-                        <button type="submit" class="btn btn-primary btn-block">Dispatch Event Gateway</button>
-                        <div id="ingest-alert" class="alert hidden"></div>
-                    </form>
-                </div>
-
-                <!-- LIVE TERMINAL LOGS -->
-                <div class="logs-section glass-card">
-                    <div class="logs-header">
-                        <h2 class="section-title">Live Node Telemetry Logs</h2>
-                        <span class="pulse-dot"></span>
+                            <button type="submit" class="btn btn-primary btn-block">Dispatch Event Gateway</button>
+                            <div id="ingest-alert" class="alert hidden"></div>
+                        </form>
                     </div>
-                    <div class="logs-terminal" id="logs-terminal">
-                        <!-- Real-time logs populate here -->
+
+                    <!-- LIVE TERMINAL LOGS -->
+                    <div class="logs-section glass-card">
+                        <div class="logs-header">
+                            <h2 class="section-title">Live Node Telemetry Logs</h2>
+                            <span class="pulse-dot"></span>
+                        </div>
+                        <div class="logs-terminal" id="logs-terminal">
+                            <!-- Real-time logs populate here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEAD LETTER QUEUE (DLQ) TABLE -->
+            <section class="dlq-section glass-card" id="dlq-table-section">
+                <h2 class="section-title">Dead Letter Queue (DLQ) Manager</h2>
+                <div class="table-container">
+                    <table class="dlq-table">
+                        <thead>
+                            <tr>
+                                <th>Job ID / Idempotency Key</th>
+                                <th>Queue</th>
+                                <th>Handler Name</th>
+                                <th>Failed Attempts</th>
+                                <th>Terminal Error Message</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dlq-table-body">
+                            <tr>
+                                <td colspan="6" class="table-empty">Dead Letter Queue is empty. No failures reported.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- API DOCUMENTATION VIEW TAB -->
+        <div id="docs-view" class="hidden">
+            <!-- OVERVIEW CARD -->
+            <div class="glass-card doc-card">
+                <h2 class="section-title">API Integration Overview</h2>
+                <p>NexusFlow provides a high-throughput, non-blocking ingestion endpoint to accept webhook events, transactional triggers, and background jobs. Incoming payloads are instantly validated, checked for duplicate keys, and logged to active Redis Streams before returning an immediate response. Background workers handle execution asynchronously.</p>
+                <div class="doc-meta-grid">
+                    <div class="doc-meta-item">
+                        <span class="meta-label">GATEWAY ENDPOINT</span>
+                        <code class="meta-val highlight-endpoint">POST http://127.0.0.1:8000/api/events</code>
+                    </div>
+                    <div class="doc-meta-item">
+                        <span class="meta-label">CONTENT TYPE</span>
+                        <code class="meta-val">application/json</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REQUEST PAYLOAD PARAMETERS -->
+            <div class="glass-card doc-card">
+                <h2 class="section-title">Request Body Specification</h2>
+                <div class="table-container">
+                    <table class="dlq-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter Name</th>
+                                <th>Data Type</th>
+                                <th>Requirement</th>
+                                <th>Validation Rules & Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code class="param-name">queue</code></td>
+                                <td><code>string</code></td>
+                                <td><span class="badge badge-required">Required</span></td>
+                                <td>Target processing queue. Must match a queue defined in <code>config.php</code>:
+                                    <br>• <code>pdf-generation</code> (Simulated rendering workloads)
+                                    <br>• <code>api-sync</code> (External HTTP synchronization threads)
+                                    <br>• <code>data-transform</code> (Database/data scrubbing batches)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code class="param-name">name</code></td>
+                                <td><code>string</code></td>
+                                <td><span class="badge badge-required">Required</span></td>
+                                <td>Job handler mapping registered in the orchestrator registry:
+                                    <br>• <code>pdf.generate</code> (Requires template/order parameters)
+                                    <br>• <code>api.sync</code> (Requires target endpoints/payload arrays)
+                                    <br>• <code>data.transform</code> (Requires records_count/operations)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code class="param-name">idempotency_key</code></td>
+                                <td><code>string</code></td>
+                                <td><span class="badge badge-required">Required</span></td>
+                                <td>A unique client-supplied token (e.g. UUIDv4 or transaction ID).
+                                    NexusFlow uses this to prevent double-processing and filter duplicate events.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code class="param-name">payload</code></td>
+                                <td><code>object</code></td>
+                                <td><span class="badge badge-required">Required</span></td>
+                                <td>Key-value dictionary containing arguments matching the task handler's required format. Must be valid JSON.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RETURN RESPONSES & SCHEMAS -->
+            <div class="glass-card doc-card">
+                <h2 class="section-title">HTTP Response Schemas</h2>
+                <div class="doc-response-grid">
+                    <!-- Status 202 -->
+                    <div class="response-card">
+                        <div class="response-header">
+                            <span class="badge status-code code-202">202 Accepted</span>
+                            <span class="response-desc">Job enqueued successfully.</span>
+                        </div>
+                        <pre class="code-box"><code>{
+  "status": "queued",
+  "job_id": "pk-472098b1-d419-4a94",
+  "stream_id": "1784376125089-0"
+}</code></pre>
+                    </div>
+
+                    <!-- Status 200 -->
+                    <div class="response-card">
+                        <div class="response-header">
+                            <span class="badge status-code code-200">200 OK</span>
+                            <span class="response-desc">Duplicate matched (Completed).</span>
+                        </div>
+                        <pre class="code-box"><code>{
+  "status": "completed",
+  "duplicate": true,
+  "message": "Event already processed successfully"
+}</code></pre>
+                    </div>
+
+                    <!-- Status 409 -->
+                    <div class="response-card">
+                        <div class="response-header">
+                            <span class="badge status-code code-409">409 Conflict</span>
+                            <span class="response-desc">Duplicate in-flight execution.</span>
+                        </div>
+                        <pre class="code-box"><code>{
+  "error": "Event is already being processed by a worker"
+}</code></pre>
+                    </div>
+
+                    <!-- Status 400 -->
+                    <div class="response-card">
+                        <div class="response-header">
+                            <span class="badge status-code code-400">400 Bad Request</span>
+                            <span class="response-desc">Payload validation mismatch.</span>
+                        </div>
+                        <pre class="code-box"><code>{
+  "error": "Missing job name"
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CODE SAMPLES CARD -->
+            <div class="glass-card doc-card">
+                <h2 class="section-title">Integration Code Snippets</h2>
+                <div class="doc-tabs-container">
+                    <!-- CURL -->
+                    <div class="snippet-group">
+                        <h3>cURL / Bash Webhook Trigger</h3>
+                        <pre class="code-box"><code class="language-bash">curl -X POST http://127.0.0.1:8000/api/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "queue": "pdf-generation",
+    "name": "pdf.generate",
+    "idempotency_key": "order-inv-99482",
+    "payload": {
+      "order_id": 99482,
+      "template": "invoice_pdf",
+      "client_email": "hello@nexusflow.io"
+    }
+  }'</code></pre>
+                    </div>
+
+                    <!-- JS -->
+                    <div class="snippet-group">
+                        <h3>Node.js / JS Fetch Client</h3>
+                        <pre class="code-box"><code class="language-javascript">async function dispatchEvent() {
+  const url = 'http://127.0.0.1:8000/api/events';
+  const payload = {
+    queue: 'api-sync',
+    name: 'api.sync',
+    idempotency_key: `crm-sync-${Date.now()}`,
+    payload: {
+      endpoint: 'crm/contacts',
+      payload: { name: 'Alice Smith', email: 'alice@example.com' }
+    }
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+  console.log(`Status: ${response.status}`, result);
+}</code></pre>
+                    </div>
+
+                    <!-- PHP cURL -->
+                    <div class="snippet-group">
+                        <h3>PHP HTTP Webhook Client</h3>
+                        <pre class="code-box"><code class="language-php">&lt;?php
+
+$url = 'http://127.0.0.1:8000/api/events';
+$data = [
+    'queue' => 'data-transform',
+    'name' => 'data.transform',
+    'idempotency_key' => uniqid('evt_', true),
+    'payload' => [
+        'records_count' => 150,
+        'operation' => 'scrubbing'
+    ]
+];
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+$response = curl_exec($ch);
+$statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+echo "Code: $statusCode \nResponse: $response\n";
+</code></pre>
+                    </div>
+
+                    <!-- PHP Direct Redis -->
+                    <div class="snippet-group">
+                        <h3>PHP Direct Redis Ingestion (No HTTP Overhead)</h3>
+                        <p class="snippet-desc">If your application runs in the same environment, you can bypass the HTTP gateway and enqueue directly to the Redis Stream to minimize network latency:</p>
+                        <pre class="code-box"><code class="language-php">&lt;?php
+
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+
+$id = uniqid('direct_', true);
+$jobData = [
+    'id' => $id,
+    'name' => 'pdf.generate',
+    'payload' => json_encode(['order_id' => 8847, 'template' => 'label']),
+    'queue' => 'pdf-generation',
+    'attempts' => '0',
+    'created_at' => (string)microtime(true),
+    'last_error' => ''
+];
+
+// Write directly to stream
+$streamId = $redis->xAdd('stream:pdf-generation', '*', $jobData);
+echo "Directly enqueued to stream. Stream ID: $streamId\n";
+</code></pre>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- DEAD LETTER QUEUE (DLQ) TABLE -->
-        <section class="dlq-section glass-card" id="dlq-table-section">
-            <h2 class="section-title">Dead Letter Queue (DLQ) Manager</h2>
-            <div class="table-container">
-                <table class="dlq-table">
-                    <thead>
-                        <tr>
-                            <th>Job ID / Idempotency Key</th>
-                            <th>Queue</th>
-                            <th>Handler Name</th>
-                            <th>Failed Attempts</th>
-                            <th>Terminal Error Message</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dlq-table-body">
-                        <tr>
-                            <td colspan="6" class="table-empty">Dead Letter Queue is empty. No failures reported.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
     </div>
     
     <script src="/assets/js/dashboard.js"></script>

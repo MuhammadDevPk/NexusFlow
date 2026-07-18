@@ -473,3 +473,23 @@ function showIngestAlert(type, message) {
         }, 4000);
     }
 }
+
+// Tab Switching Controller
+function switchTab(tabId) {
+    const monitorView = document.getElementById('monitor-view');
+    const docsView = document.getElementById('docs-view');
+    const btnMonitor = document.getElementById('btn-tab-monitor');
+    const btnDocs = document.getElementById('btn-tab-docs');
+
+    if (tabId === 'monitor') {
+        monitorView.classList.remove('hidden');
+        docsView.classList.add('hidden');
+        btnMonitor.classList.add('active');
+        btnDocs.classList.remove('active');
+    } else {
+        monitorView.classList.add('hidden');
+        docsView.classList.remove('hidden');
+        btnMonitor.classList.remove('active');
+        btnDocs.classList.add('active');
+    }
+}
